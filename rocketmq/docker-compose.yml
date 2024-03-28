@@ -1,0 +1,23 @@
+version: '3'
+services:
+  namesrv:
+    image: apacherocketmq/rocketmq:latest
+    container_name: rmqnamesrv
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+
+  broker:
+    image: apacherocketmq/rocketmq:latest
+    container_name: rmqbroker
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+    command: sh mqbroker
+    volumes:
+      - ./data/broker/logs:/root/logs
+      - ./data/broker/store:/root/store
+    depends_on:
+      - namesrv

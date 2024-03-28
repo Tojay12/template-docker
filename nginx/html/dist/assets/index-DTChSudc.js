@@ -1,0 +1,1 @@
+import{q as e}from"./index-CfxxE0OO.js";import"./index-DoZ6u9uq.js";const t=e("auth",{state:()=>({defaultAccount:"",getlang:"cn",loginnew:{},expiresTime:"",token:localStorage.getItem("token"),mynew:{}}),actions:{logintoken(e){this.token=e},getuserinfos(e){this.mynew=e}}});export{t as u};

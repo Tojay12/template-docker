@@ -1,0 +1,39 @@
+# MongoDB 配置示例
+
+# 通用服务器设置
+systemLog:
+  destination: file
+  logAppend: true
+  path: /data/logs/mongod.log
+
+# 存储设置
+storage:
+  dbPath: /data/db
+  journal:
+    enabled: true
+
+# 处理客户端请求的端口号，默认是 27017
+net:
+  port: 27017
+  bindIp: 0.0.0.0 # 替换为你的服务器IP或0.0.0.0(谨慎使用)
+
+# 安全性设置
+security:
+  authorization: enabled
+
+# 性能调优设置（可选）
+#operationProfiling:
+#  mode: all
+#  slowOpThresholdMs: 50
+
+# 复制集设置（如果使用复制集）
+#replication:
+#  replSetName: "rs0"
+
+# 分片设置（如果使用分片）
+#sharding:
+#  clusterRole: "shardsvr"
+
+# 其他设置
+#setParameter:
+#  enableLocalhostAuthBypass: false

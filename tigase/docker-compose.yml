@@ -1,0 +1,17 @@
+version: '3'
+services:
+  tigase:
+    image: tigase/tigase-xmpp-server:8.3.1
+    container_name: tigase
+    ports:
+      - "5222:5222"
+      - "5280:5280"
+      - "5290:5290"
+      - "8080:8080"
+    environment:
+      - DB_ROOT_USER=root
+      - DB_ROOT_PASS=123456
+    volumes:
+      - ./etc/:/home/tigase/tigase-server/etc/
+      - ./certs/:/home/tigase/tigase-server/certs/
+      - ./data/:/home/tigase/tigase-server/data/

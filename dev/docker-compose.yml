@@ -1,0 +1,109 @@
+#fixme  Clone openIM Server project before using docker-compose,project address：https://github.com/OpenIMSDK/Open-IM-Server.git
+#  The command that triggers this file to pull the image is "docker compose up -d".
+version: '3'
+
+networks:
+  server:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: '${DOCKER_BRIDGE_SUBNET:-172.28.0.0/16}'
+          gateway: '${DOCKER_BRIDGE_GATEWAY:-172.28.0.1}'
+
+services:
+  mongodb:
+    image: mongo:${MONGODB_IMAGE_VERSION-3.6}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    container_name: mongo
+    # 在启用 --auth 之前，确保你的 MongoDB 数据库中至少有一个用户被配置为管理员。否则，你可能无法重新连接到数据库来添加或修改用户。
+    command: [ "/bin/bash", "-c", "mongod --wiredTigerCacheSizeGB 1" ]
+    volumes:
+      - "${DATA_DIR:-./}/mongodb/data/db:/data/db"
+      - "${DATA_DIR:-./}/mongodb/logs:/data/logs"
+      - "${DATA_DIR:-./}/mongodb/conf/mongod.conf.orig:/etc/mongod.conf.orig"
+      # - "./scripts/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro"   /docker-entrypoint-initdb.d/mongo-init.sh || true; docker-entrypoint.sh
+    environment:
+      - TZ=Asia/Shanghai
+      - wiredTigerCacheSizeGB=1
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-123456}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE:-tigasedb}
+      - MONGO_OPENIM_USERNAME=${MONGO_OPENIM_USERNAME:-tigase_user} # Non-root username
+      - MONGO_OPENIM_PASSWORD=${MONGO_OPENIM_PASSWORD:-123456} # Non-root password
+    restart: always
+    networks:
+      server:
+        ipv4_address: ${MONGO_NETWORK_ADDRESS:-172.28.0.2}
+
+  mysql:
+    image: mysql:8.0.36
+    container_name: mysql8
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf/my.cnf:/etc/mysql/my.cnf
+    restart: always
+    networks:
+      server:
+          ipv4_address: ${MYSQL_NETWORK_ADDRESS:-172.28.0.6}
+
+  namesrv:
+    image: apacherocketmq/rocketmq:latest
+    container_name: rmqnamesrv
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+    restart: always
+    networks:
+      server:
+        ipv4_address: ${NAMESRV_NETWORK_ADDRESS:-172.28.0.3}
+
+  broker:
+    image: apacherocketmq/rocketmq:latest
+    container_name: rmqbroker
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+    command: sh mqbroker
+    volumes:
+      - ./rocketmq/data/broker/logs:/root/logs
+      - ./rocketmq/data/broker/store:/root/store
+    depends_on:
+      - namesrv
+    restart: always
+    networks:
+      server:
+        ipv4_address: ${BROKER_NETWORK_ADDRESS:-172.28.0.4}
+
+  tigase:
+    image: tigase/tigase-xmpp-server:8.3.1
+    container_name: tigase
+    ports:
+      - "5222:5222"
+      - "5280:5280"
+      - "5290:5290"
+      - "8080:8080"
+    environment:
+      - DB_ROOT_USER=root
+      - DB_ROOT_PASS=123456
+    volumes:
+      - ./tigase/etc/:/home/tigase/tigase-server/etc/
+      - ./tigase/certs/:/home/tigase/tigase-server/certs/
+      - ./tigase/data/:/home/tigase/tigase-server/data/
+    restart: always
+    networks:
+      server:
+        ipv4_address: ${TIGASE_NETWORK_ADDRESS:-172.28.0.5}
+    depends_on:
+      - broker
+      - mysql
+
+

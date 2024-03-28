@@ -1,0 +1,41 @@
+admins = [ 'admin@618ef78a83fd' ]
+'config-type' = 'default'
+debug = [ 'server' ]
+'default-virtual-host' = '618ef78a83fd'
+dataSource () {
+    default () {
+        uri = 'jdbc:mysql://192.168.1.54:3307/tigase_db?user=tigase_user&password=123456&useSSL=false&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true'
+    }
+}
+c2s {
+    seeOtherHost {}
+    socket () {
+        ssl = 'off'
+    }
+}
+ext () {}
+'ext-man' () {}
+http () {
+    setup () {
+        'admin-password' = '123456'
+        'admin-user' = 'tigase_user'
+    }
+}
+pubsub () {
+    trusted = [ 'http@{clusterNode}' ]
+}
+s2s {
+    socket () {
+        ssl = 'off'
+    }
+}
+'sess-man' () {
+    'jabber:iq:last-marker' () {}
+    motd () {}
+    starttls (class: tigase.xmpp.impl.StartTLS, active: false) {
+            queueSize = null
+            threadsNo = 1
+        }
+}
+
+

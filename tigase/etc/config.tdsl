@@ -1,0 +1,8 @@
+'config-type' = 'setup'
+
+http () {
+    setup () {
+        'admin-user' = 'admin'
+        'admin-password' = 'tigase'
+    }
+}

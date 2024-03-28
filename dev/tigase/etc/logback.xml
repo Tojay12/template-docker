@@ -1,0 +1,82 @@
+<!--
+
+    Tigase XMPP Server - The instant messaging server
+    Copyright (C) 2004 Tigase, Inc. (office@tigase.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, version 3 of the License.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program. Look for COPYING file in the top folder.
+    If not, see http://www.gnu.org/licenses/.
+
+-->
+
+<!--
+To enable logback for Tigase packages
+1) uncomment LevelChangePropagator context listener
+2) add jul-to-slf4j ('org.slf4j.bridge.SLF4JBridgeHandler') to the list of handlers:
+```
+logging () {
+    rootHandlers = [ 'java.util.logging.ConsoleHandler', 'java.util.logging.FileHandler', 'org.slf4j.bridge.SLF4JBridgeHandler' ]
+}
+```
+-->
+<configuration scan="true"  scanPeriod="120 seconds">
+<!--    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>-->
+
+<!--    <shutdownHook/>-->
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- daily rollover, files will be compressed -->
+        <file>logs/${HOSTNAME}/tigase.logback.log</file>
+
+        <!-- set immediateFlush to true to make sure everything is logged and
+        to false for much higher logging throughput -->
+        <immediateFlush>false</immediateFlush>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- automatically compress rolled files -->
+            <fileNamePattern>logs/${HOSTNAME}/tigase.logback.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+
+            <!-- keep 7 days' worth of history capped at 1GB total size and 250M per-file -->
+            <maxFileSize>250MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <append>true</append>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%-125(%yellow([%d{yyyy-MM-dd HH:mm:ss.SSS}]) [%highlight(%-5level)] [%20(%thread)] %blue(%logger{5}.%method\(\))): %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Offers higher throughput but Method name won't be available in logs, enabled in appender-ref -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
+        <queueSize>1024</queueSize>
+    </appender>
+
+    <!-- possible levels (TRACE, DEBUG, INFO, WARN and ERROR) -->
+    <!-- Mappings to JUL levels are described in http://www.slf4j.org/api/org/slf4j/bridge/SLF4JBridgeHandler.html  -->
+    <logger name="tigase.server" level="DEBUG"/>
+    <logger name="tigase.xmpp.impl" level="TRACE"/>
+<!--    <logger name="tigase.io" level="TRACE"/>-->
+<!--    <logger name="tigase.net" level="TRACE"/>-->
+<!--    <logger name="tigase.xmpp" level="DEBUG"/>-->
+
+    <!--jetty / http-api configuration-->
+    <logger name="org.eclipse.jetty" level="warn"/>
+
+    <root level="INFO">
+        <!-- ASYNC appender offers higher throughput but Method name won't be available in logs -->
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
+

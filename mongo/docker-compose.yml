@@ -1,0 +1,37 @@
+#fixme  Clone openIM Server project before using docker-compose,project address：https://github.com/OpenIMSDK/Open-IM-Server.git
+#  The command that triggers this file to pull the image is "docker compose up -d".
+version: '3'
+
+networks:
+  server:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: '${DOCKER_BRIDGE_SUBNET:-172.28.0.0/16}'
+          gateway: '${DOCKER_BRIDGE_GATEWAY:-172.28.0.1}'
+
+services:
+  mongodb:
+    image: mongo:${MONGODB_IMAGE_VERSION-3.6}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    container_name: mongo
+    command: [ "/bin/bash", "-c", "mongod --wiredTigerCacheSizeGB 1 --auth" ]
+    volumes:
+      - "${DATA_DIR:-./}/data/db:/data/db"
+      - "${DATA_DIR:-./}/logs:/data/logs"
+      - "${DATA_DIR:-./}/conf/mongod.conf:/etc/mongo/mongod.conf"
+      # - "./scripts/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro"   /docker-entrypoint-initdb.d/mongo-init.sh || true; docker-entrypoint.sh
+    environment:
+      - TZ=Asia/Shanghai
+      - wiredTigerCacheSizeGB=1
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-123456}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE:-tigasedb}
+      - MONGO_OPENIM_USERNAME=${MONGO_OPENIM_USERNAME:-tigase_user} # Non-root username
+      - MONGO_OPENIM_PASSWORD=${MONGO_OPENIM_PASSWORD:-123456} # Non-root password
+    restart: always
+    networks:
+      server:
+        ipv4_address: ${MONGO_NETWORK_ADDRESS:-172.28.0.2}
